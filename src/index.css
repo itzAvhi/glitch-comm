@@ -263,3 +263,46 @@
     box-shadow: 0 0 20px hsla(var(--glow-emergency), 0.6);
   }
 }
+
+@keyframes circuit-pulse {
+  0%, 100% { 
+    background-color: hsl(var(--terminal) / 0.1);
+    box-shadow: 0 0 10px hsl(var(--terminal) / 0.2);
+  }
+  50% { 
+    background-color: hsl(var(--terminal) / 0.3);
+    box-shadow: 0 0 20px hsl(var(--terminal) / 0.4);
+  }
+}
+
+@layer utilities {
+  /* Interactive animations */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--terminal) / 0.3);
+  }
+  
+  /* Spark effects */
+  .spark-effect {
+    @apply absolute w-1 h-1 bg-warning rounded-full animate-ping;
+  }
+  
+  .spark-effect::before {
+    content: '';
+    @apply absolute inset-0 bg-warning rounded-full animate-pulse;
+    animation-delay: 0.5s;
+  }
+  
+  /* Circuit board styling */
+  .circuit-active {
+    @apply bg-terminal/20 shadow-lg shadow-terminal/30;
+    animation: circuit-pulse 2s ease-in-out infinite;
+  }
+}

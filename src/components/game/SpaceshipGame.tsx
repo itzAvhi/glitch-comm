@@ -10,6 +10,8 @@ interface SystemStatus {
   name: string;
   status: 'online' | 'warning' | 'offline';
   switchState: boolean;
+  powerLevel?: number;
+  temperature?: number;
 }
 
 interface ChatMessage {
@@ -42,12 +44,12 @@ export const SpaceshipGame = ({ playerName, playerRole, onExitGame }: SpaceshipG
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'unstable' | 'offline'>('unstable');
   
   const [systemsStatus, setSystemsStatus] = useState<SystemStatus[]>([
-    { id: 'power', name: 'PRIMARY POWER', status: 'offline', switchState: false },
-    { id: 'life_support', name: 'LIFE SUPPORT', status: 'warning', switchState: true },
-    { id: 'navigation', name: 'NAVIGATION', status: 'offline', switchState: false },
-    { id: 'communications', name: 'LONG RANGE COMM', status: 'offline', switchState: false },
-    { id: 'engines', name: 'ENGINE SYSTEMS', status: 'offline', switchState: false },
-    { id: 'shields', name: 'DEFLECTOR SHIELDS', status: 'warning', switchState: true },
+    { id: 'power', name: 'PRIMARY POWER', status: 'offline', switchState: false, powerLevel: 0, temperature: 25 },
+    { id: 'life_support', name: 'LIFE SUPPORT', status: 'warning', switchState: true, powerLevel: 45, temperature: 68 },
+    { id: 'navigation', name: 'NAVIGATION', status: 'offline', switchState: false, powerLevel: 0, temperature: 22 },
+    { id: 'communications', name: 'LONG RANGE COMM', status: 'offline', switchState: false, powerLevel: 0, temperature: 30 },
+    { id: 'engines', name: 'ENGINE SYSTEMS', status: 'offline', switchState: false, powerLevel: 0, temperature: 85 },
+    { id: 'shields', name: 'DEFLECTOR SHIELDS', status: 'warning', switchState: true, powerLevel: 35, temperature: 72 },
   ]);
 
   const [instructions] = useState<Instruction[]>([
@@ -109,18 +111,28 @@ export const SpaceshipGame = ({ playerName, playerRole, onExitGame }: SpaceshipG
         // Update system status based on correct sequence
         if (systemId === 'power' && newState) {
           updatedSystem.status = 'online';
+          updatedSystem.powerLevel = 100;
+          updatedSystem.temperature = 45;
           toast.success("Primary power restored!");
         } else if (systemId === 'navigation' && newState && systemsStatus.find(s => s.id === 'power')?.switchState) {
           updatedSystem.status = 'online';
+          updatedSystem.powerLevel = 95;
+          updatedSystem.temperature = 55;
           toast.success("Navigation systems online!");
         } else if (systemId === 'engines' && newState && systemsStatus.find(s => s.id === 'navigation')?.switchState) {
           updatedSystem.status = 'online';
+          updatedSystem.powerLevel = 90;
+          updatedSystem.temperature = 78;
           toast.success("Engine systems restored!");
         } else if (systemId === 'communications' && newState) {
           updatedSystem.status = 'online';
+          updatedSystem.powerLevel = 85;
+          updatedSystem.temperature = 42;
           toast.success("Long range communications restored!");
         } else if (!newState) {
           updatedSystem.status = 'offline';
+          updatedSystem.powerLevel = 0;
+          updatedSystem.temperature = Math.max(20, (updatedSystem.temperature || 50) - 10);
         }
 
         return updatedSystem;
@@ -130,6 +142,18 @@ export const SpaceshipGame = ({ playerName, playerRole, onExitGame }: SpaceshipG
 
     // Check win condition
     setTimeout(() => checkWinCondition(), 500);
+  };
+
+  const handlePowerLevelChange = (systemId: string, level: number) => {
+    setSystemsStatus(prev => prev.map(system => {
+      if (system.id === systemId) {
+        const updatedSystem = { ...system, powerLevel: level };
+        // Adjust temperature based on power level
+        updatedSystem.temperature = Math.min(100, 20 + (level * 0.8));
+        return updatedSystem;
+      }
+      return system;
+    }));
   };
 
   const checkWinCondition = () => {
@@ -256,6 +280,7 @@ export const SpaceshipGame = ({ playerName, playerRole, onExitGame }: SpaceshipG
           {playerRole === 'operator' ? (
             <ControlPanel 
               onSystemChange={handleSystemChange}
+              onPowerLevelChange={handlePowerLevelChange}
               systemsStatus={systemsStatus}
             />
           ) : (
